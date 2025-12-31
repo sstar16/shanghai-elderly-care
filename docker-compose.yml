@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL + PostGIS 数据库
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: elderly-care-db
+    environment:
+      POSTGRES_USER: lzhd
+      POSTGRES_PASSWORD: "1"
+      POSTGRES_DB: elder
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data:/data  # 挂载数据目录，用于导入CSV
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lzhd -d elder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elderly-care-backend
+    environment:
+      DATABASE_URL: postgresql://lzhd:1@db:5432/elder
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app  # 开发时热重载
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # React 前端服务 (开发模式)
+  frontend:
+    image: node:18-alpine
+    container_name: elderly-care-frontend
+    working_dir: /app
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # 排除node_modules
+    command: sh -c "npm install && npm start"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: elderly-care-network
