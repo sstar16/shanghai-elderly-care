@@ -3,13 +3,13 @@
  * 使用高德地图展示养老机构和卫生服务中心
  */
 window._AMapSecurityConfig = {
-  securityJsCode: '101ab874e4882728f6bf6885bdc7f4f3',
+  securityJsCode: 'yoursecuritycode',
 };
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import AMapLoader from '@amap/amap-jsapi-loader';
 
 // 高德地图 API Key（需要替换为实际的 Key）
-const AMAP_KEY = '274f9915a5b99a872c19a62aa0844fd9';
+const AMAP_KEY = 'youramapapikey';
 
 const MapComponent = ({ 
   elderlyData = [], 
